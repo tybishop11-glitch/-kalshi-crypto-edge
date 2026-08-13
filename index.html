@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Kalshi Edge" />
+  <title>Kalshi Crypto Edge</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{
+      --bg:#0b0f14; --panel:#121820; --panel2:#171f29; --line:#26313d;
+      --text:#f4f7fb; --muted:#8ea0b5; --good:#31d07c; --bad:#ff5f65;
+      --warn:#ffca58; --accent:#55a6ff;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
+      padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 28px);
+    }
+    .wrap{max-width:720px;margin:0 auto}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+    h1{font-size:25px;margin:0;letter-spacing:-.5px}
+    .sub{color:var(--muted);font-size:13px;margin-top:3px}
+    .pill{padding:8px 10px;border-radius:999px;background:var(--panel2);font-size:12px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+    button.coin{
+      appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+      border-radius:13px;padding:11px 7px;font-weight:700;font-size:13px
+    }
+    button.coin.active{background:#18283b;color:#dcecff;border-color:#315276}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:12px}
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:center;margin:8px 0}
+    .label{color:var(--muted);font-size:13px}
+    .value{font-variant-numeric:tabular-nums;font-weight:650}
+    .price{font-size:30px;font-weight:780;letter-spacing:-.8px}
+    .market-title{font-weight:700;line-height:1.25}
+    .signal{
+      text-align:center;border-radius:16px;padding:18px 14px;font-size:28px;font-weight:850;
+      letter-spacing:.3px;margin:12px 0 8px;background:var(--panel2)
+    }
+    .buyyes{color:var(--good);border:1px solid #25563f}
+    .buyno{color:var(--bad);border:1px solid #65333a}
+    .pass{color:var(--warn);border:1px solid #6a5830}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .metric{background:var(--panel2);border-radius:14px;padding:12px}
+    .metric .big{font-size:21px;font-weight:780;margin-top:3px}
+    .positive{color:var(--good)} .negative{color:var(--bad)}
+    .status{font-size:12px;color:var(--muted);line-height:1.4}
+    .error{color:#ff9398}
+    .refresh{
+      width:100%;appearance:none;border:0;border-radius:15px;background:#1877f2;color:white;
+      padding:14px;font-weight:800;font-size:16px;margin-top:2px
+    }
+    details{color:var(--muted);font-size:12px}
+    summary{cursor:pointer;margin-bottom:8px}
+    .tiny{font-size:11px;color:var(--muted);line-height:1.4}
+    .loader{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent);margin-right:6px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>Kalshi Crypto Edge</h1>
+      <div class="sub">Live signal dashboard • read-only</div>
+    </div>
+    <div class="pill" id="clock">—</div>
+  </div>
+
+  <div class="grid" id="coinButtons"></div>
+
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="label">COINBASE SPOT</div>
+        <div class="price" id="spot">—</div>
+      </div>
+      <div style="text-align:right">
+        <div class="label">MOMENTUM</div>
+        <div class="value" id="momentum">—</div>
+      </div>
+    </div>
+    <div class="two">
+      <div class="metric"><div class="label">MODEL YES</div><div class="big" id="modelYes">—</div></div>
+      <div class="metric"><div class="label">MODEL NO</div><div class="big" id="modelNo">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="label">KALSHI MARKET</div>
+    <div class="market-title" id="marketTitle" style="margin:5px 0 12px">Searching…</div>
+    <div class="row"><div class="label">YES ask</div><div class="value" id="yesAsk">—</div></div>
+    <div class="row"><div class="label">NO ask</div><div class="value" id="noAsk">—</div></div>
+    <div class="row"><div class="label">Closes</div><div class="value" id="closeTime">—</div></div>
+    <div class="row"><div class="label">Ticker</div><div class="value" id="ticker" style="font-size:11px;text-align:right">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="two">
+      <div class="metric"><div class="label">YES EDGE</div><div class="big" id="yesEdge">—</div></div>
+      <div class="metric"><div class="label">NO EDGE</div><div class="big" id="noEdge">—</div></div>
+    </div>
+    <div class="signal pass" id="signal">LOADING</div>
+    <div class="row"><div class="label">Max model entry</div><div class="value" id="maxEntry">—</div></div>
+    <div class="status" id="status"><span class="loader"></span>Loading live data…</div>
+  </div>
+
+  <button class="refresh" id="refresh">Refresh now</button>
+
+  <div class="card">
+    <details>
+      <summary>Model details</summary>
+      <div class="row"><div class="label">1m move</div><div class="value" id="r1">—</div></div>
+      <div class="row"><div class="label">3m move</div><div class="value" id="r3">—</div></div>
+      <div class="row"><div class="label">5m move</div><div class="value" id="r5">—</div></div>
+      <div class="row"><div class="label">10m move</div><div class="value" id="r10">—</div></div>
+      <div class="row"><div class="label">15m volatility</div><div class="value" id="vol15">—</div></div>
+      <p class="tiny">The probability is a transparent momentum/volatility heuristic, not a trained or calibrated forecast. Edge is model probability minus the current executable ask price. Trading fees and slippage are not included.</p>
+    </details>
+  </div>
+</div>
+
+<script>
+const CONFIG = {
+  refreshMs: 20000,
+  minEdge: 0.08,
+  kalshiBase: "https://external-api.kalshi.com/trade-api/v2",
+  coinbaseBase: "https://api.exchange.coinbase.com",
+  coins: {
+    BTC: { product: "BTC-USD", words: ["bitcoin","btc"] },
+    ETH: { product: "ETH-USD", words: ["ethereum","eth"] },
+    SOL: { product: "SOL-USD", words: ["solana","sol"] },
+    XRP: { product: "XRP-USD", words: ["xrp","ripple"] }
+  }
+};
+
+let selected = "BTC";
+let timer = null;
+const $ = id => document.getElementById(id);
+
+function fmtPct(x, digits=1){ return Number.isFinite(x) ? `${(x*100).toFixed(digits)}%` : "—"; }
+function fmtMove(x){ return Number.isFinite(x) ? `${x>=0?"+":""}${(x*100).toFixed(3)}%` : "—"; }
+function fmtMoney(x, symbol){ if(!Number.isFinite(x)) return "—"; const d = symbol==="BTC" ? 2 : (x<10 ? 4 : 2); return "$"+x.toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d}); }
+function fmtCents(x){ return Number.isFinite(x) ? `${(x*100).toFixed(x*100%1?1:0)}¢` : "—"; }
+function sigmoid(x){ x=Math.max(-20,Math.min(20,x)); return 1/(1+Math.exp(-x)); }
+function logret(a,b){ return (a>0&&b>0)?Math.log(a/b):0; }
+function stdev(v){ if(v.length<2)return 0; const m=v.reduce((a,b)=>a+b,0)/v.length; return Math.sqrt(v.reduce((s,x)=>s+(x-m)**2,0)/(v.length-1)); }
+
+async function fetchJSON(url){
+  const r = await fetch(url,{cache:"no-store"});
+  if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return r.json();
+}
+
+async function coinbaseSignal(symbol){
+  const p = CONFIG.coins[symbol].product;
+  const [ticker,candles] = await Promise.all([
+    fetchJSON(`${CONFIG.coinbaseBase}/products/${p}/ticker`),
+    fetchJSON(`${CONFIG.coinbaseBase}/products/${p}/candles?granularity=60`)
+  ]);
+
+  candles.sort((a,b)=>a[0]-b[0]);
+  const closes = candles.map(c=>Number(c[4]));
+  if(closes.length<16) throw new Error("Not enough Coinbase candles");
+
+  const cur=closes.at(-1);
+  const r1=logret(cur,closes.at(-2));
+  const r3=logret(cur,closes.at(-4));
+  const r5=logret(cur,closes.at(-6));
+  const r10=logret(cur,closes.at(-11));
+  const rets=[]; for(let i=1;i<closes.length;i++) rets.push(logret(closes[i],closes[i-1]));
+  const vol15=stdev(rets.slice(-15));
+  const wm=r1*.35+r3*.30+r5*.20+r10*.15;
+  let mom=wm/Math.max(vol15,.00001);
+  mom=Math.max(-4,Math.min(4,mom));
+  const yes=sigmoid(mom*1.25);
+
+  return {
+    price:Number(ticker.price), bid:Number(ticker.bid), ask:Number(ticker.ask),
+    yes, no:1-yes, r1,r3,r5,r10,vol15,momentum:mom
+  };
+}
+
+function marketScore(m, symbol){
+  const words=CONFIG.coins[symbol].words;
+  const text=`${m.ticker||""} ${m.event_ticker||""} ${m.title||""} ${m.subtitle||""} ${m.yes_sub_title||""}`.toLowerCase();
+  let score=0;
+  for(const w of words) if(text.includes(w)) score+=10;
+  if(text.includes("15 min")||text.includes("15-minute")||text.includes("15 minute")||text.includes("15m")) score+=20;
+  const close=new Date(m.close_time||m.expected_expiration_time||m.expiration_time||0).getTime();
+  const mins=(close-Date.now())/60000;
+  if(mins>0 && mins<=20) score+=30;
+  if(mins>20 && mins<=60) score+=10;
+  if((m.status||"open")==="open") score+=5;
+  return score;
+}
+
+async function kalshiMarket(symbol){
+  const data=await fetchJSON(`${CONFIG.kalshiBase}/markets?status=open&limit=1000`);
+  const markets=(data.markets||[]).map(m=>({m,score:marketScore(m,symbol)})).filter(x=>x.score>=10);
+  markets.sort((a,b)=>{
+    if(b.score!==a.score) return b.score-a.score;
+    const ac=new Date(a.m.close_time||a.m.expected_expiration_time||a.m.expiration_time||0).getTime();
+    const bc=new Date(b.m.close_time||b.m.expected_expiration_time||b.m.expiration_time||0).getTime();
+    return ac-bc;
+  });
+  return markets[0]?.m || null;
+}
+
+function setClass(id,x){ const el=$(id); el.classList.remove("positive","negative"); if(Number.isFinite(x))el.classList.add(x>=0?"positive":"negative"); }
+
+function drawButtons(){
+  $("coinButtons").innerHTML="";
+  for(const s of Object.keys(CONFIG.coins)){
+    const b=document.createElement("button"); b.className="coin"+(s===selected?" active":""); b.textContent=s;
+    b.onclick=()=>{selected=s;drawButtons();refresh();}; $("coinButtons").appendChild(b);
+  }
+}
+
+async function refresh(){
+  clearTimeout(timer);
+  $("status").innerHTML='<span class="loader"></span>Refreshing…';
+  $("signal").textContent="LOADING"; $("signal").className="signal pass";
+  try{
+    const [sig,mkt] = await Promise.all([coinbaseSignal(selected),kalshiMarket(selected)]);
+    $("spot").textContent=fmtMoney(sig.price,selected);
+    $("momentum").textContent=(sig.momentum>=0?"+":"")+sig.momentum.toFixed(2);
+    $("modelYes").textContent=fmtPct(sig.yes); $("modelNo").textContent=fmtPct(sig.no);
+    $("r1").textContent=fmtMove(sig.r1); $("r3").textContent=fmtMove(sig.r3);
+    $("r5").textContent=fmtMove(sig.r5); $("r10").textContent=fmtMove(sig.r10);
+    $("vol15").textContent=fmtPct(sig.vol15,3);
+
+    if(!mkt){
+      $("marketTitle").textContent="No matching open Kalshi market found";
+      ["yesAsk","noAsk","closeTime","ticker","yesEdge","noEdge","maxEntry"].forEach(x=>$(x).textContent="—");
+      $("signal").textContent="PASS"; $("signal").className="signal pass";
+      $("status").textContent="Coinbase is live. No suitable open Kalshi market was auto-detected for this coin.";
+    } else {
+      const yesAsk=Number(mkt.yes_ask_dollars);
+      const noAsk=Number(mkt.no_ask_dollars);
+      const yEdge=Number.isFinite(yesAsk)?sig.yes-yesAsk:NaN;
+      const nEdge=Number.isFinite(noAsk)?sig.no-noAsk:NaN;
+      $("marketTitle").textContent=mkt.title||mkt.subtitle||mkt.ticker;
+      $("yesAsk").textContent=fmtCents(yesAsk); $("noAsk").textContent=fmtCents(noAsk);
+      const close=mkt.close_time||mkt.expected_expiration_time||mkt.expiration_time;
+      $("closeTime").textContent=close?new Date(close).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}):"—";
+      $("ticker").textContent=mkt.ticker||"—";
+      $("yesEdge").textContent=fmtPct(yEdge); $("noEdge").textContent=fmtPct(nEdge);
+      setClass("yesEdge",yEdge); setClass("noEdge",nEdge);
+
+      let signal="PASS", cls="pass", maxEntry=Math.max(sig.yes-CONFIG.minEdge,0);
+      if(Number.isFinite(yEdge) && yEdge>=CONFIG.minEdge && yEdge>=nEdge){ signal="BUY YES"; cls="buyyes"; maxEntry=sig.yes-CONFIG.minEdge; }
+      else if(Number.isFinite(nEdge) && nEdge>=CONFIG.minEdge){ signal="BUY NO"; cls="buyno"; maxEntry=sig.no-CONFIG.minEdge; }
+      $("signal").textContent=signal; $("signal").className=`signal ${cls}`;
+      $("maxEntry").textContent=fmtCents(Math.max(0,Math.min(1,maxEntry)));
+      $("status").textContent=`Updated ${new Date().toLocaleTimeString()}. Signal requires at least ${(CONFIG.minEdge*100).toFixed(0)}% model edge before fees.`;
+    }
+  }catch(e){
+    $("status").innerHTML=`<span class="error">Data error: ${e.message}. If this is a browser CORS error, deploy the included Cloudflare Worker proxy and set the API bases to it.</span>`;
+    $("signal").textContent="OFFLINE"; $("signal").className="signal pass";
+  }
+  timer=setTimeout(refresh,CONFIG.refreshMs);
+}
+
+$("refresh").onclick=refresh;
+setInterval(()=>$("clock").textContent=new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"}),1000);
+drawButtons();
+if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+refresh();
+</script>
+</body>
+</html>
